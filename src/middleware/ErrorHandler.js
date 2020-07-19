@@ -1,21 +1,28 @@
 const logger = require('log4js').getLogger();
+const { LOCAL } = require('../lib/constants/environments');
 
 const errorHandler = (err, _, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
+
   logger.error(err);
-  const error = {
+
+  const error = (process.env.NODE_ENV === LOCAL) ? {
     error: {
       name: err.name,
+      stack: err.stack,
       message: err.message,
       code: err.code,
     },
-  };
+  } : {
+      error: {
+        name: err.name,
+        code: err.code,
+      },
+    };
 
-  const status = err.status || 500;
-
-  return res.status(status).json(error);
+  return res.status(err.status || 500).json(error);
 };
 
 module.exports = {

@@ -2,72 +2,15 @@
 // const { scheduleJob: ScheduleJob } = require('node-schedule');
 const jsdom = require('jsdom');
 const { findBestMatch } = require('string-similarity');
-const SimpleYouTube = require('simple-youtube-api');
 const request = require('request-promise');
 // const puppeteer = require('puppeteer');
 
 const timeout = 10000;
 const { getMilliseconds } = require('../functions/milliseconds.js');
-// const { getProxies } = require('../functions/Proxy.js');
-const { yt_api_keys: YTAPIKEYS } = require('../../../config.json');
 
 const { JSDOM } = jsdom;
 
-// let job;
-// let proxies = [];
-
-// if (!proxies || proxies.length <= 10) {
-//   (async () => {
-//     proxies = await getProxies().catch(console.error);
-//   })();
-
-//   job = new ScheduleJob('hour', '0 0 * * * *', async () => {
-//     proxies = await getProxies().catch(console.error);
-//     proxyRequest('https://www.invidio.us/watch?v=eS0jVsp6Hm8');
-//   });
-// }
-
-const proxyRequest = async (uri) => {
-  let info;
-
-  // while (proxies.length > 0) {
-  //   const proxy = proxies[0];
-  //   if (!proxy) break;
-
-  //   info = await Promise.race([
-  //     new Promise((resolve, reject) => {
-  //       console.log(uri);
-  //       request({ uri, proxy: `http://${proxy.ipAddress}:${proxy.port}` }).then(resolve).catch((err) => reject(err));
-  //     }),
-  //     new Promise((resolve, reject) => {
-  //       setTimeout(() => reject(new Error('3500ms timeout ended.')), 3500);
-  //     }),
-  //   ]).catch(console.error);
-
-  //   if (!info) proxies.shift();
-  // else break;
-  // }
-
-  // if (proxies.length === 0 && !info) {
-  info = await request({ uri, timeout });
-  // }
-
-  return info;
-};
-
-// let browser = undefined;
-// const maxPages = 10;
-
 class YouTube {
-  constructor() {
-    if (YTAPIKEYS && Array.isArray(YTAPIKEYS)) {
-      this.youtubeKeys = {
-        keys: YTAPIKEYS,
-        index: 0,
-      };
-      this.youtube = new SimpleYouTube(this.youtubeKeys.keys[this.youtubeKeys.index]);
-    }
-  }
 
   static async getYoutubePlaylist(uri) {
     // https://youtube.com/playlist?list=PLRCAnALQiSQWMuY6pHxV0Y4UJAAXfTRPS0
@@ -85,7 +28,7 @@ class YouTube {
     const ID = remainingStr.substring(0, endOfID);
     if (!ID) return undefined;
 
-    const info = await proxyRequest(`https://invidio.us/playlist?list=${ID}`).catch((error) => console.error(error));
+    const info = await request(`https://invidio.us/playlist?list=${ID}`).catch((error) => console.error(error));
     if (!info) return undefined;
 
     return YouTube.getInvidioUsTracks(info);
@@ -270,7 +213,7 @@ class YouTube {
 
   static async getTracksBackup(str) {
     const url = `https://invidio.us/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
-    const info = await proxyRequest(url);
+    const info = await request(url);
     return YouTube.getInvidioUsTracks(info);
   }
 
@@ -296,10 +239,10 @@ class YouTube {
         const channelMeta = video.getElementsByClassName('by-user');
 
         // make sure we have this info available, otherwise it's incomplete and no good.
-        if (trackMeta != null && trackMeta.length > 0 && trackMeta[0] && trackMeta[0].title
-          && trackMeta[0].href && idMeta != null && idMeta.length > 0 && idMeta[0] && idMeta[0].src
-          && timeMeta != null && timeMeta.length > 0 && timeMeta[0] && timeMeta[0].innerHTML
-          && channelMeta != null && channelMeta.length > 0 && channelMeta[0] && channelMeta[0].href) {
+        if (trackMeta && trackMeta.length > 0 && trackMeta[0] && trackMeta[0].title
+          && trackMeta[0].href && idMeta && idMeta.length > 0 && idMeta[0] && idMeta[0].src
+          && timeMeta && timeMeta.length > 0 && timeMeta[0] && timeMeta[0].innerHTML
+          && channelMeta && channelMeta.length > 0 && channelMeta[0] && channelMeta[0].href) {
           // init info
           tracks.push({ info: {} });
           const index = tracks.length - 1;
@@ -394,54 +337,69 @@ class YouTube {
     return undefined;
   }
 
-  /**
-   * find relevant videos to autoplay from.
-   * @param uri the youtube URI to look through.
-   * @returns {Promise<TrackResponse>}
-   */
   async findRelevantVideos(uri) {
     let videoID;
 
-    // youtube or fake?
     if (uri.includes('watch?v=')) {
       const split = uri.split('watch?v=');
       if (split.length > 1) {
         [, videoID] = split;
       }
     }
+
     if (!videoID) {
       throw new Error('Invalid YouTube URI to autoplay off of.');
     }
 
-    let relevantVideos = await this.relevantVideos(videoID).catch(() => undefined);
+    return this.relevantVideos(videoID).catch(() => []);
+  }
 
-    // rate limit? error?
-    if (relevantVideos == null) {
-      for (let i = 0; i < this.youtubeKeys.keys.length; i += 1) {
-        this.youtube = new SimpleYouTube(this.youtubeKeys.keys[i]);
-        // eslint-disable-next-line no-await-in-loop
-        relevantVideos = await this.relevantVideos(videoID).catch(console.error);
-        if (relevantVideos) {
-          this.youtubeKeys.index = i;
-          break;
-        }
+  async relevantVideos(videoID) {
+    const info = await request({ url: `https://clipmega.com/watch?v=${videoID}`, timeout }).catch((error) => console.error(error));
+    if (!info) return [];
+
+    const { document } = (new JSDOM(info)).window;
+
+    const videoSelection = document.querySelectorAll('.related-video > a');
+    if (!videoSelection || videoSelection.length <= 0) return [];
+
+    const basicVideos = videoSelection.map(metaData => {
+      if (!metaData || !metaData.href || !metaData.href) return {};
+      video = {
+        videoID: metaData.href.replace('https://clipmega.com/watch?v=', ''),
+        url: metaData.href.replace('clipmega', 'youtube'),
+        title: metaData.title,
+      };
+
+      return video;
+    });
+
+
+    const thumbnailsSelection = document.querySelectorAll('.related-thumbs > img');
+    const thumbnails = thumbnailsSelection.map(thumbnail => (thumbnail && thumbnail.src) ? thumbnail.src : '');
+
+    const durationSelection = document.querySelectorAll('.related-thumbs > span');
+    const durations = durationSelection.map(duration => (duration && duration.innerHTML) ? getMilliseconds(duration.innerHTML) : '');
+
+    const channelSelection = document.querySelectorAll('.user');
+    const channels = channelSelection.map(channel => (channel && channel.innerHTML) ? channel.innerHTML : '');
+
+    for (let i = 0; i < basicVideos.length; i += 1) {
+      if (basicVideos.length === thumbnails.length && thumbnails[i]) {
+        video[i].thumbnail = thumbnails[i];
+      }
+
+      if (basicVideos.length === durations.length && durations[i]) {
+        video[i].thumbnail = durations[i];
+      }
+
+      if (basicVideos.length === channels.length && channels[i]) {
+        video[i].thumbnail = channels[i];
       }
     }
 
-    return relevantVideos;
-  }
-
-  /**
-   * gets the relevant videos based on this video.
-   * @param {BigInt} videoID the youtube videoID
-   * @returns {Promise<void>}
-   */
-  async relevantVideos(videoID) {
-    return this.youtube.search(undefined, undefined, {
-      relatedToVideoId: videoID,
-      type: 'video',
-      videoCategoryId: '10',
-    });
+    // convert to track format
+    return basicVideos(basicVideo => ({ info: basicVideo }));
   }
 }
 
