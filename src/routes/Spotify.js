@@ -1,18 +1,19 @@
 const route = require('express-promise-router')();
 
 const { spotifyAlbum, spotifyArtist } = require('../lib/helpers/Spotify');
+const { spotifyJob } = require('../tasks/minute');
 
 const notFoundUri = 'Expected uri in body';
 
 const testSpotify = async (url) => {
   if (url.match(/album/i)) {
     const [, playlistID] = spotifyAlbum.exec(url);
-    return minuteJob.spotify.getAlbum(playlistID);
+    return spotifyJob.spotify.getAlbum(playlistID);
   }
 
   if (url.match(/artist/i)) {
     const [, playlistID] = spotifyArtist.exec(url);
-    return minuteJob.spotify.getArtist(playlistID);
+    return spotifyJob.spotify.getArtist(playlistID);
   }
 
   if (url.match(/user/i)) {
@@ -23,7 +24,7 @@ const testSpotify = async (url) => {
   const matches = spotifyList.exec(url);
   if (matches && matches.length > 0) {
     const [, playlistID] = matches;
-    return minuteJob.spotify.getLinks(playlistID);
+    return spotifyJob.spotify.getLinks(playlistID);
   }
   return [];
 }

@@ -269,18 +269,8 @@ class YouTube {
     return { tracks, type: 'clipmega' };
   }
 
-  /**
-   * finds the closets match
-   * @param {Array<String>} videos the list of videos.
-   * @param {Float64Array} threshold the threshold to test against
-   * @param {Array<String>} titles the titles to test against
-   * @param {String} phrase the phrase to add
-   * @param {String} album the album.
-   * @param {String} artists the artists.
-   * @returns {*}
-   */
   static async findClosest(videos, threshold, titles, phrase, album, artists) {
-    // find the best match whether using album or phrase, it's a toss up; it's strange for small songs.
+    // find the best match whether using album or phrase, it's a toss up; it's strange for unpopular songs.
     const albumSearch = findBestMatch(`${phrase} ${album}`, titles);
     const artistsSearch = findBestMatch(`${phrase} ${artists}`, titles);
     const artistsSearch2 = findBestMatch(`${artists} ${phrase} `, titles);
@@ -298,14 +288,6 @@ class YouTube {
     return false;
   }
 
-  /**
-   * searches youtube videos and performs three checks to find out which is the closest match to the track.
-   * @param {String} phrase the phrase to search for
-   * @param {String} phrase2 the 2nd phrase to search for
-   * @param {String} album the album to also help search for
-   * @param {String} artists the artists of the song.
-   * @returns {Promise<void>}
-   */
   static async closestYouTubeMatch(phrase, phrase2, album, artists) {
     const videos = await YouTube.getTracks(`${phrase} lyrics`);
 
