@@ -9,6 +9,11 @@ const { LOCAL } = require('./lib/constants/environments');
 
 const router = require('./routes/Routes');
 
+const { spotifyJob } = require('./tasks');
+
+
+spotifyJob();
+
 logger.level = 'info';
 const port = process.env.PORT || 8443;
 const env = process.env.NODE_ENV || LOCAL;
@@ -28,4 +33,3 @@ server.use(httpLogger());
 server.use('/', router, errorHandler);
 
 server.listen(port, () => logger.info(`${env.toUpperCase()} server started on ${port}`));
-

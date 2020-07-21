@@ -306,7 +306,7 @@ const findClosest = (videos, threshold, titles, phrase, album, artists) => {
   return false;
 };
 
-const closestYouTubeMatch = async (phrase, phrase2, album, artists) => {
+const closestYouTubeMatch = async (phrase, backup, album, artists) => {
   const videos = await getTracks(`${phrase} lyrics`);
 
   if (!videos || !videos.tracks || !videos.tracks[0] || !videos.tracks[0].info) return undefined;
@@ -319,7 +319,7 @@ const closestYouTubeMatch = async (phrase, phrase2, album, artists) => {
   const found = findClosest(videos, threshold, titles, phrase, album, artists);
 
   if (found) return found;
-  if (!phrase2) return undefined;
+  if (!backup) return undefined;
 
   // try 1 more time with just the phrase
   // higher threshold because we're being less restrictive
@@ -330,7 +330,7 @@ const closestYouTubeMatch = async (phrase, phrase2, album, artists) => {
 
   const titles2 = videos2.tracks.map((video) => video.info.title);
 
-  const found2 = findClosest(videos2, threshold2, titles2, phrase2, album, artists);
+  const found2 = findClosest(videos2, threshold2, titles2, backup, album, artists);
   if (!found2) return undefined;
 
   return found2;
@@ -397,4 +397,5 @@ module.exports = {
   getTracks,
   getHDTracksInvidio,
   getPlayClipMegaURL,
+  closestYouTubeMatch,
 };

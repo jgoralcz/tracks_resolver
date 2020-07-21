@@ -1,5 +1,6 @@
 const basicAuth = require('express-basic-auth');
 const { basicAuth: auth } = require('../lib/constants/paths');
+
 const { username, password } = require(auth);
 
 const authorizer = (user, pass, cb) => {

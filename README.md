@@ -2,14 +2,27 @@
 Middleware to resolve tracks.
 
 ## Setup
-Setup your `config.json` file at the root of the project like so:
+Setup your `api.json` file at the root of the project like so (this is found on spotify):
 ```json
-  {
-    "yt_api_keys": [
-      "youtube_api_key_look_up_online",
-      "I_recommend_multiple_keys",
-    ]
-  }
+{
+    "spotify_clientId": "client_id",
+    "spotify_clientSecret": "client_secret"
+}
+```
+
+Setup your `auth.json` file at the root of the project like so (change username and password):
+```json
+{
+    "username": "yo",
+    "password": "wudup"
+}
+```
+
+Setup your `config.json` file at the root of the project like so (you can custom 1-59; default 30):
+```json
+{
+  "refreshTimeInMinutes": 30
+}
 ```
 
 ## Usage

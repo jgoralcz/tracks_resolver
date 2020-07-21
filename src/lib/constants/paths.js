@@ -1,4 +1,4 @@
-const basePath = '/Users/Josh/Documents/GitHub/tracks_resolver';
+const basePath = '/node/config/tracks_resolver';
 
 module.exports = Object.freeze({
   basicAuth: `${basePath}/auth.json`,

@@ -1,6 +1,11 @@
 /* eslint-disable no-console */
 const SpotifyAPI = require('spotify-web-api-node');
-const { spotify_clientSecret: spotifyClientSecret, spotify_clientId: spotifyClientID } = require('../../../config.json');
+const { api } = require('../constants/paths');
+
+const {
+  spotify_clientSecret: spotifyClientSecret,
+  spotify_clientId: spotifyClientID,
+} = require(api);
 
 const maxSongs = 50;
 const nextPlaylistURL = 'https://api.spotify.com/v1/playlists/';
@@ -42,8 +47,7 @@ module.exports = class Spotify {
     playlist.body.items = list.tracks.items;
     playlist.body.limit = list.tracks.limit;
 
-    // then add tracks
-    links = [...Spotify.addTracks(playlist), ...links];
+    let links = Spotify.addTracks(playlist);
 
     // get new url to page through
     let url = '';
@@ -79,20 +83,15 @@ module.exports = class Spotify {
   }
 
   static addTracks(playlist) {
-    // playlist has info
-    if (playlist && playlist.body && playlist.body.items) {
-      return playlist.body.items.map(sp => ({ info: Spotify.createSpotifyObject(sp.track) }));
-    }
-    return [];
+    if (!playlist || !playlist.body || !playlist.body.items) return [];
+    return playlist.body.items.map((sp) => ({ info: Spotify.createSpotifyObject(sp.track) }));
   }
 
   async getAlbum(id) {
     try {
       const info = await this.spotify.getAlbum(id);
-
-      // found our info
       if (info && info.body && info.body.tracks && info.body.tracks.items) {
-        return info.body.tracks.items.map(sp => ({ info: Spotify.createSpotifyObject(sp, info) }));
+        return info.body.tracks.items.map((sp) => ({ info: Spotify.createSpotifyObject(sp, info) }));
       }
     } catch (error) {
       console.error(error);
@@ -115,7 +114,7 @@ module.exports = class Spotify {
       const info = await this.spotify.getArtistTopTracks(id, 'US');
 
       if (info && info.body && info.body.tracks) {
-        return info.body.tracks.map(sp => ({ info: Spotify.createSpotifyObject(sp, info) }));
+        return info.body.tracks.map((sp) => ({ info: Spotify.createSpotifyObject(sp, info) }));
       }
       return undefined;
     } catch (error) {
@@ -129,7 +128,7 @@ module.exports = class Spotify {
       title: `${sp.artists[0].name} - ${sp.name}`,
       name: sp.name,
       album: (info && info.body) ? info.body.name : sp.album.name,
-      artists: sp.artists.map(artist => artist.name),
+      artists: sp.artists.map((artist) => artist.name),
       length: sp.duration_ms,
       position: 0,
       uri: sp.external_urls.spotify,
