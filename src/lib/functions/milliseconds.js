@@ -4,7 +4,6 @@ const getMilliseconds = (time) => {
   // reverse so we can work with an easier way such as (seconds, minutes, hours)
   const times = time.split(':').reverse();
 
-  // milliseconds
   const ms = 1000;
   let t = 1;
 

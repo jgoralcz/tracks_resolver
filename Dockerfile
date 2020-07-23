@@ -1,31 +1,19 @@
-# docker stop track_resolver || true && docker rm track_resolver || true && docker run -d -p 9443:9443 --restart always --memory="1024m" --cpu-shares=1024 --name track_resolver track_resolver
-# docker build -t track_resolver . && docker stop track_resolver || true && docker rm track_resolver || true && docker run -d --restart=always --network=bridge --memory="1024m" --cpu-shares=1024 --name track_resolver track_resolver
-FROM node:latest
+
+FROM node:current-alpine3.11
 
 LABEL owner = jgoralcz
-LABEL serviceVersion = 0.1.0
+LABEL serviceVersion = 2.0.0
 LABEL description = "Metadata Track Resolver"
 
-ENV NODE_ENV=PROD
+WORKDIR /usr/node
 
-# get different garbage collector
-RUN apt-get update && apt-get install --force-yes -yy \
-  libjemalloc1 \
-  && rm -rf /var/lib/apt/lists/*
+COPY --chown=node:node package*.json /usr/node/
+COPY --chown=node:node src/ /usr/node/src/
 
-# Change memory allocator to avoid leaks
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.1
+RUN npm install --production=true
 
-COPY --chown=node:node config.json /usr/src/node/
-COPY --chown=node:node package*.json /usr/src/node/
-COPY --chown=node:node src/ /usr/src/node/src/
-
-WORKDIR /usr/src/node
-
-EXPOSE 9443
+EXPOSE 8443
 
 USER node
-
-RUN npm install
 
 CMD ["npm", "start"]

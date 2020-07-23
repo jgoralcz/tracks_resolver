@@ -4,10 +4,9 @@ const log4js = require('log4js');
 log4js.configure({
   appenders: {
     console: { type: 'stdout' },
-    everything: { type: 'dateFile', filename: 'logs/chat.log' },
   },
   categories: {
-    default: { appenders: ['console', 'everything'], level: 'debug' },
+    default: { appenders: ['console'], level: 'debug' },
   },
 });
 
