@@ -2,7 +2,7 @@
 API to resolve very minimal youtube metadata without actually using youtube.
 
 ## Setup
-Setup your `api.json` file at the root of the project like so (this is found on spotify):
+Setup your `api.json` file at `/node/config/` like so (this is found on spotify):
 ```json
 {
     "spotify_clientId": "client_id",
@@ -10,7 +10,7 @@ Setup your `api.json` file at the root of the project like so (this is found on 
 }
 ```
 
-Setup your `auth.json` file at the root of the project like so (change username and password):
+Setup your `auth.json` file at `/node/config/` like so (change username and password):
 ```json
 {
     "username": "yo",
@@ -18,7 +18,7 @@ Setup your `auth.json` file at the root of the project like so (change username 
 }
 ```
 
-Setup your `config.json` file at the root of the project like so (you can custom 1-59; default 30); the refresh time for the spotify token because i'm lazy:
+Setup your `config.json` file at `/node/config/` like so (you can custom 1-59; default 30); the refresh time for the spotify token because i'm lazy:
 ```json
 {
   "refreshTimeInMinutes": 30
