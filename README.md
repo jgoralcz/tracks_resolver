@@ -1,5 +1,5 @@
 # Track Resolver
-Middleware to resolve tracks.
+API to resolve very minimal youtube metadata without actually using youtube.
 
 ## Setup
 Setup your `api.json` file at the root of the project like so (this is found on spotify):
@@ -18,187 +18,311 @@ Setup your `auth.json` file at the root of the project like so (change username 
 }
 ```
 
-Setup your `config.json` file at the root of the project like so (you can custom 1-59; default 30):
+Setup your `config.json` file at the root of the project like so (you can custom 1-59; default 30); the refresh time for the spotify token because i'm lazy:
 ```json
 {
   "refreshTimeInMinutes": 30
 }
 ```
+<br>
+<br>
 
 ## Usage
-Make a POST request to the url and a response body like so:
- 
+---
+### Youtube
+`GET - /youtube/search` - `name` or `url` query params required; `type` query param (`invidio` for invidio) \
+ex: `localhost:8443/youtube/search?name=thanks+for+the+memories`
 ```js
-{ "uri": "youtube.com/watch?v=stuff" }
-```
-example response:
-```json
-{
-    "title": "Where Are We Going [OFFICIAL] 2018 lyrics",
-    "uri": "https://redirector.googlevideo.com/videoplayback?expire=1571576839&ei=pwesXcO4J4uHir4Pvqyv2Ao&ip=35.187.132.251&id=o-AJKGQqWvJDsL45oN4zfRO5HPlpp7jX7grDRxi-ndUJeY&itag=18&source=youtube&requiressl=yes&mm=31,29&mn=sn-qxoedn7e,sn-qxo7sney&ms=au,rdu&mv=m&mvi=0&pl=28&mime=video/mp4&gir=yes&clen=9404565&ratebypass=yes&dur=309.080&lmt=1539265400861934&mt=1571555076&fvip=1&fexp=23842630&c=WEB&txp=5531432&sparams=expire,ei,ip,id,itag,source,requiressl,mime,gir,clen,ratebypass,dur,lmt&sig=ALgxI2wwRQIgLLK8X08FiwDaPmvsMV-mTme7vGO2Mxm9OZvMUKno2Y4CIQD_8doLoj5-trPtaSWxFSWGfbqo7vEmZpCZprOUE2HfuQ==&lsparams=mm,mn,ms,mv,mvi,pl&lsig=AHylml4wRgIhAKAossY_ZCAwggQD5HwxYgeMcDquy2gLVsFLC4j86UEHAiEA6Qdv17NiYw1KFzdGl4SRsrMz1bB_FmjiyAUEZSlI3e4=",
-    "identifier": "E7Sa6ZQRqFM"
-}
-```
-
-or search for a word
-
-```js
-{ "search": "Mr. Blue Sky" }
-```
-example response:
-```json
 {
     "tracks": [
         {
             "info": {
-                "title": "Electric Light Orchestra - Mr. Blue Sky (Audio)",
-                "uri": "https://www.youtube.com/watch?v=s7dTBoW5H9k",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/s7dTBoW5H9k/mqdefault.jpg",
-                "length": 305000,
-                "author": "ELOVEVO",
-                "identifier": "s7dTBoW5H9k"
+                "title": "Fall Out Boy - Thanks For The Memories lyrics with song",
+                "uri": "https://www.youtube.com/watch?v=3jx7SF65wbs",
+                "thumbnail": "https://ytimg.googleusercontent.com/vi/3jx7SF65wbs/mqdefault.jpg",
+                "length": 207000,
+                "author": "mo8955",
+                "identifier": "3jx7SF65wbs"
             }
         },
         {
             "info": {
-                "title": "Electric Light Orchestra - Mr Blue Sky (Guardians of the Galaxy 2: Awesome Mix Vol. 2 )",
-                "uri": "https://www.youtube.com/watch?v=VMtarj8Ua0s",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/VMtarj8Ua0s/mqdefault.jpg",
-                "length": 304000,
-                "author": "DJ Rome",
-                "identifier": "VMtarj8Ua0s"
+                "title": "Fall Out Boy - Thnks fr th Mmrs (Official Music Video)",
+                "uri": "https://www.youtube.com/watch?v=onzL0EM1pKY",
+                "thumbnail": "https://ytimg.googleusercontent.com/vi/onzL0EM1pKY/mqdefault.jpg",
+                "length": 254000,
+                "author": "Fall Out Boy",
+                "identifier": "onzL0EM1pKY"
             }
         },
         {
             "info": {
-                "title": "Electric Light Orchestra - Mr. Blue Sky (Animated Video)",
-                "uri": "https://www.youtube.com/watch?v=G8dsvclf3Tk",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/G8dsvclf3Tk/mqdefault.jpg",
-                "length": 223000,
-                "author": "ELOVEVO",
-                "identifier": "G8dsvclf3Tk"
+                "title": "Nightcore - Thanks For The Memories",
+                "uri": "https://www.youtube.com/watch?v=NRj8n4a7kpU",
+                "thumbnail": "https://ytimg.googleusercontent.com/vi/NRj8n4a7kpU/mqdefault.jpg",
+                "length": 173000,
+                "author": "NightcoreReality",
+                "identifier": "NRj8n4a7kpU"
             }
         },
         {
             "info": {
-                "title": "Electric Light Orchestra - Mr. Blue Sky",
-                "uri": "https://www.youtube.com/watch?v=aQUlA8Hcv4s",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/aQUlA8Hcv4s/mqdefault.jpg",
-                "length": 295000,
-                "author": "ELOVEVO",
-                "identifier": "aQUlA8Hcv4s"
+                "title": "Thanks for the Memory",
+                "uri": "https://www.youtube.com/watch?v=nKgUq5dziEk",
+                "thumbnail": "https://ytimg.googleusercontent.com/vi/nKgUq5dziEk/mqdefault.jpg",
+                "length": 288000,
+                "author": "scott9445",
+                "identifier": "nKgUq5dziEk"
             }
         },
         {
             "info": {
-                "title": "Weezer - Mr. Blue Sky",
-                "uri": "https://www.youtube.com/watch?v=6_aqeCDk1Yk",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/6_aqeCDk1Yk/mqdefault.jpg",
-                "length": 287000,
-                "author": "weezer",
-                "identifier": "6_aqeCDk1Yk"
+                "title": "Fall Out Boy - Thnks Fr Th Mmrs (Audio) (HD)",
+                "uri": "https://www.youtube.com/watch?v=cMY5VwfcGdU",
+                "thumbnail": "https://ytimg.googleusercontent.com/vi/cMY5VwfcGdU/mqdefault.jpg",
+                "length": 204000,
+                "author": "TheMephBot",
+                "identifier": "cMY5VwfcGdU"
+            }
+        },
+        .
+        .
+        .
+        
+    ],
+    "type": "clipmega"
+}
+```
+ex: `localhost:8443/youtube/search?url=https://www.youtube.com/watch?v=3jx7SF65wbs`
+```js
+{
+    "title": "Fall Out Boy - Thanks For The Memories lyrics with song",
+    "uri": "https://redirector.googlevideo.com/videoplayback?expire=1595495753&ei=6QAZX6uFFsilhwbW9o6wDA&ip=66.249.83.119&id=o-ACOXNzzMuu869FBLXkVQq0Ljwuq7-bVsLslAF406D-79&itag=18&source=youtube&requiressl=yes&mh=AV&mm=31,26&mn=sn-5uaezn7e,sn-5hne6n7e&ms=au,onr&mv=m&mvi=3&pl=28&initcwndbps=19561250&vprv=1&mime=video/mp4&gir=yes&clen=6880762&ratebypass=yes&dur=206.425&lmt=1540239407082860&mt=1595474069&fvip=3&fexp=23883097&c=WEB&txp=5531432&sparams=expire,ei,ip,id,itag,source,requiressl,vprv,mime,gir,clen,ratebypass,dur,lmt&lsparams=mh,mm,mn,ms,mv,mvi,pl,initcwndbps&lsig=AG3C_xAwRQIhAJY_UhLkV5IBmvuA7Enp51C5ExAkyfY5gAp8SrSlxxlTAiBABCVWYc35tjMA2VDqdrqyDGopm9uBQRlXmK56BCPexg==&sig=AOq0QJ8wRQIgaR0Ul_3-B1OIcHIc6PEa-cbq3RZm5D4C-p2QbIUOFNICIQDtcN3jIoFZMkWOGYpDD9WAl6QdG0auxR01GpHoFFhvWQ==",
+    "type": "clipmega"
+}
+```
+
+`GET - /youtube/similarto` - url query param required \
+ex: `localhost:8443/youtube/similarto?url=https://www.youtube.com/watch?v=3jx7SF65wbs`
+
+```js
+{
+    "tracks": [
+        {
+            "info": {
+                "videoID": "Ufb70h78eO4",
+                "url": "https://www.youtube.com/watch?v=Ufb70h78eO4",
+                "title": "Fall Out Boy - Sugar We",
+                "thumbnail": "//ytimg.googleusercontent.com/vi/Ufb70h78eO4/mqdefault.jpg",
+                "length": 217000,
+                "author": "deejayelectronic"
             }
         },
         {
             "info": {
-                "title": "Mr. Blue Sky with Lyrics",
-                "uri": "https://www.youtube.com/watch?v=CPAC2SWvo6E",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/CPAC2SWvo6E/mqdefault.jpg",
-                "length": 309000,
-                "author": "The Cove",
-                "identifier": "CPAC2SWvo6E"
+                "videoID": "qVmnkZdbH2U",
+                "url": "https://www.youtube.com/watch?v=qVmnkZdbH2U",
+                "title": "Fall Out Boy - Dance, Dance Lyrics",
+                "thumbnail": "//ytimg.googleusercontent.com/vi/qVmnkZdbH2U/mqdefault.jpg",
+                "length": 182000,
+                "author": "Amber Thomas"
             }
         },
-        {
-            "info": {
-                "title": "Mr blue sky Fanimation music video",
-                "uri": "https://www.youtube.com/watch?v=8MjjCuSEBsM",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/8MjjCuSEBsM/mqdefault.jpg",
-                "length": 224000,
-                "author": "Tristans Toons",
-                "identifier": "8MjjCuSEBsM"
-            }
-        },
-        {
-            "info": {
-                "title": "Jeff Lynne",
-                "uri": "https://www.youtube.com/watch?v=Nubi_xJJ1Jg",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/Nubi_xJJ1Jg/mqdefault.jpg",
-                "length": 300000,
-                "author": "David Webb",
-                "identifier": "Nubi_xJJ1Jg"
-            }
-        },
-        {
-            "info": {
-                "title": "Discord Sings Mr. Blue Sky (gone wrong)",
-                "uri": "https://www.youtube.com/watch?v=2KG-vH46U0c",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/2KG-vH46U0c/mqdefault.jpg",
-                "length": 342000,
-                "author": "FizzyGoldTing",
-                "identifier": "2KG-vH46U0c"
-            }
-        },
-        {
-            "info": {
-                "title": "Beat Saber - Mr. Blue Sky - Electric Light Orchestra (custom song) | FC",
-                "uri": "https://www.youtube.com/watch?v=ziWXxg2NhYs",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/ziWXxg2NhYs/mqdefault.jpg",
-                "length": 233000,
-                "author": "Tempex",
-                "identifier": "ziWXxg2NhYs"
-            }
-        },
-        {
-            "info": {
-                "title": "Mr. Blue Sky (ft. Cursed Images)",
-                "uri": "https://www.youtube.com/watch?v=gW4Q8y7Zde8",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/gW4Q8y7Zde8/mqdefault.jpg",
-                "length": 229000,
-                "author": "sm33r",
-                "identifier": "gW4Q8y7Zde8"
-            }
-        },
-        {
-            "info": {
-                "title": "Every time Mr. Blue Sky shows up on movies (Montage)",
-                "uri": "https://www.youtube.com/watch?v=BAK1EErTyOc",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/BAK1EErTyOc/mqdefault.jpg",
-                "length": 258000,
-                "author": "Jovi Prata",
-                "identifier": "BAK1EErTyOc"
-            }
-        },
-        {
-            "info": {
-                "title": "Mr Blue Sky Guardians of the Galaxy Vol 2",
-                "uri": "https://www.youtube.com/watch?v=t2xOT9-DZGE",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/t2xOT9-DZGE/mqdefault.jpg",
-                "length": 303000,
-                "author": "Lyrics music",
-                "identifier": "t2xOT9-DZGE"
-            }
-        },
-        {
-            "info": {
-                "title": "MegaMind - Electric Light Orchestra - Mr Blue Sky",
-                "uri": "https://www.youtube.com/watch?v=ET5pj7HmQ08",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/ET5pj7HmQ08/mqdefault.jpg",
-                "length": 178000,
-                "author": "Avatarthelastbenderheaven",
-                "identifier": "ET5pj7HmQ08"
-            }
-        },
-        {
-            "info": {
-                "title": "Jeff Lynne",
-                "uri": "https://www.youtube.com/watch?v=LMY5xe36cfE",
-                "thumbnail": "https://ytimg.googleusercontent.com/vi/LMY5xe36cfE/mqdefault.jpg",
-                "length": 310000,
-                "author": "BBC Radio 2",
-                "identifier": "LMY5xe36cfE"
-            }
-        }
+        .
+        .
+        .
     ]
+}
+```
+
+`GET - /spotify` - pharse (required), artists, backupPhrase, album \
+`ex: localhost:8443/youtube/spotify?phrase=I+Remember&artists=deadmau5`
+```js
+{
+    "info": {
+        "title": "deadmau5 & Kaskade - I Remember (HQ)",
+        "uri": "https://www.youtube.com/watch?v=zK1mLIeXwsQ",
+        "thumbnail": "https://ytimg.googleusercontent.com/vi/zK1mLIeXwsQ/mqdefault.jpg",
+        "length": 594000,
+        "author": "Ultra Music",
+        "identifier": "zK1mLIeXwsQ"
+    }
+}
+```
+<br>
+<br>
+
+### Spotify
+`GET - /spotify` - url (required) \
+ex: `localhost:8443/spotify?url=https://open.spotify.com/artist/6S2tas4z6DyIklBajDqJxI?si=9Nx7X-HeT7KAsTvIIxOUHw`
+```js
+[
+    {
+        "info": {
+            "title": "Infected Mushroom - Becoming Insane",
+            "name": "Becoming Insane",
+            "artists": [
+                "Infected Mushroom"
+            ],
+            "length": 440266,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/1Nukcy7xk7AbS7MtkaiOe3"
+        }
+    },
+    {
+        "info": {
+            "title": "Infected Mushroom - I Wish (feat. Jay Jenner)",
+            "name": "I Wish (feat. Jay Jenner)",
+            "artists": [
+                "Infected Mushroom",
+                "Jetlag Music",
+                "HOT-Q",
+                "Jay Jenner",
+                "WhyNot Music"
+            ],
+            "length": 171436,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/22z9GL53FudbuFJqa43Nzj"
+        }
+    },
+    {
+        "info": {
+            "title": "Infected Mushroom - More of Just the Same",
+            "name": "More of Just the Same",
+            "artists": [
+                "Infected Mushroom",
+                "WHITENO1SE"
+            ],
+            "length": 428556,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/3c9DkPaBKxwVETIxQhQydW"
+        }
+    },
+    {
+        "info": {
+            "title": "Infected Mushroom - Guitarmass",
+            "name": "Guitarmass",
+            "artists": [
+                "Infected Mushroom"
+            ],
+            "length": 398896,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/6VHBZt8T7ZdlUt3MkOZqPy"
+        }
+    },
+    .
+    .
+    .
+]
+```
+ex: `localhost:8443/spotify?url=https://open.spotify.com/album/7GjVWG39IOj4viyWplJV4H?si=NhAnY3_9SwWEXeXexQ7A2g`
+```js
+[
+    {
+        "info": {
+            "title": "MGMT - She Works Out Too Much",
+            "name": "She Works Out Too Much",
+            "album": "Little Dark Age",
+            "artists": [
+                "MGMT"
+            ],
+            "length": 278386,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/3XOKU8CKSiQsuQHD5vhzo5"
+        }
+    },
+    {
+        "info": {
+            "title": "MGMT - Little Dark Age",
+            "name": "Little Dark Age",
+            "album": "Little Dark Age",
+            "artists": [
+                "MGMT"
+            ],
+            "length": 299960,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/2Y0iGXY6m6immVb2ktbseM"
+        }
+    },
+    {
+        "info": {
+            "title": "MGMT - When You Die",
+            "name": "When You Die",
+            "album": "Little Dark Age",
+            "artists": [
+                "MGMT"
+            ],
+            "length": 263880,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/3td69vL9Py7Ai9wfXYnvji"
+        }
+    },
+    {
+        "info": {
+            "title": "MGMT - Me and Michael",
+            "name": "Me and Michael",
+            "album": "Little Dark Age",
+            "artists": [
+                "MGMT"
+            ],
+            "length": 289853,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/0t4z0WaQomQqPONghWn8c2"
+        }
+    },
+    .
+    .
+    .
+]
+```
+ex: `localhost:8443/spotify?url=https://open.spotify.com/playlist/6z20B1TeXT8zAIp6m1XtLR?si=-mhsGw4DTEyI6zYNEHLcRQ`
+
+```js
+[
+    {
+        "info": {
+            "title": "Infected Mushroom - Becoming Insane",
+            "name": "Becoming Insane",
+            "album": "Vicious Delicious",
+            "artists": [
+                "Infected Mushroom"
+            ],
+            "length": 440266,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/1Nukcy7xk7AbS7MtkaiOe3"
+        }
+    },
+    {
+        "info": {
+            "title": "Infected Mushroom - Saeed",
+            "name": "Saeed",
+            "album": "Legend Of The Black Shawarma",
+            "artists": [
+                "Infected Mushroom"
+            ],
+            "length": 423720,
+            "position": 0,
+            "uri": "https://open.spotify.com/track/2NRFvNVeJ7GVQ46WW8lUbx"
+        }
+    },
+    .
+    .
+    .
+]
+```
+ex: `localhost:8443/spotify?url=https://open.spotify.com/track/0hbmFuxS3BaxdXdxYdjF0S?si=aJUXNPMsSxGJ9omQHoRf1Q`
+```js
+{
+    "info": {
+        "title": "Infected Mushroom - See Me Now",
+        "name": "See Me Now",
+        "album": "See Me Now",
+        "artists": [
+            "Infected Mushroom"
+        ],
+        "length": 320000,
+        "position": 0,
+        "uri": "https://open.spotify.com/track/0hbmFuxS3BaxdXdxYdjF0S"
+    }
 }
 ```
