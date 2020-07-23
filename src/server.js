@@ -6,10 +6,8 @@ const { basicAuth, authorizer, unauthResponse } = require('./middleware/basicAut
 const { errorHandler } = require('./middleware/ErrorHandler');
 const { httpLogger } = require('./middleware/Logger');
 const { LOCAL } = require('./lib/constants/environments');
-
-const router = require('./routes/Routes');
-
 const { spotifyJob } = require('./tasks');
+const router = require('./routes/Routes');
 
 
 spotifyJob();

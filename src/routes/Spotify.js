@@ -3,7 +3,7 @@ const route = require('express-promise-router')();
 const { spotify: spotifyRegex } = require('../lib/constants/regex');
 const { spotifyJob } = require('../tasks');
 
-const notFoundUri = 'Expected uri in body';
+const notFoundUri = 'Expected uri in query string';
 
 const testSpotify = async (url) => {
   if (url.match(spotifyRegex.album)) {
@@ -35,11 +35,12 @@ const testSpotify = async (url) => {
   return [];
 };
 
-route.post('/', async (req, res) => {
-  const { uri } = req.body;
+route.get('/', async (req, res) => {
+  const { url: uriEncoded } = req.query;
 
-  if (!uri) return res.status(400).send({ error: notFoundUri });
+  if (!uriEncoded) return res.status(400).send({ error: notFoundUri });
 
+  const uri = decodeURIComponent(uriEncoded);
   const results = await testSpotify(uri);
 
   return res.status(200).send(results);

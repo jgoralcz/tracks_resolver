@@ -153,13 +153,11 @@ const getPlayTunez = async (uri) => {
 };
 
 const getPlayClipMegaURL = async (uri) => {
+  console.log('uri', uri);
   if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be')) return undefined;
   if (uri.includes('list')) return getYoutubePlaylist(uri);
 
-  let url = uri.replace('m.youtube', 'clipmega').replace('youtube', 'clipmega');
-  if (url.includes('youtu.be')) {
-    url = url.replace('youtu.be/', 'clipmega.com/watch?v=');
-  }
+  const url = uri.replace('m.youtube', 'clipmega').replace('youtube', 'clipmega').replace('youtu.be/', 'clipmega.com/watch?v=');
 
   const info = await request({ url, timeout }).catch((error) => logger.error(error));
   if (!info) return getPlayTunez(uri);
@@ -307,15 +305,20 @@ const findClosest = (videos, threshold, titles, phrase, album, artists) => {
 };
 
 const closestYouTubeMatch = async (phrase, backup, album, artists) => {
-  const videos = await getTracks(`${phrase} lyrics`);
+  const videos = await getTracks(`${phrase} ${artists || ''} lyrics`);
 
   if (!videos || !videos.tracks || !videos.tracks[0] || !videos.tracks[0].info) return undefined;
 
-  // ex: https://open.spotify.com/track/1ajLuAuxGHWKwdCJ4MoiqL?si=QLBg4MXiSnKb8DJY_zSOMQ
-  const threshold = 0.55;
-  const titles = videos.tracks.map((video) => video.info.title);
+  const titlesMap = videos.tracks.map((video) => video.info.title);
+
+  const veryCloseThreshold = 0.95;
+  const veryCloseMatch = findClosest(videos, veryCloseThreshold, titlesMap, phrase, album, artists);
+  if (veryCloseMatch) return veryCloseMatch;
+
+  const titles = titlesMap.length > 5 ? titlesMap.slice(0, 5) : titlesMap;
 
   // find closest match, if found then we have a pretty accurate match, otherwise we need to try again.
+  const threshold = 0.55;
   const found = findClosest(videos, threshold, titles, phrase, album, artists);
 
   if (found) return found;

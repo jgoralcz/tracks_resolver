@@ -9,56 +9,61 @@ const {
   closestYouTubeMatch,
 } = require('../lib/helpers/YouTube');
 
-const notFoundUriOrSearch = 'Expected uri, search, or phrase in body';
-
-route.post('/', async (req, res) => {
+route.get('/spotify', async (req, res) => {
   const {
-    uri,
-    search,
-    type,
     phrase,
-  } = req.body;
+    backupPhrase,
+    album,
+    artists,
+  } = req.query;
 
-  if (!uri && !search && !phrase) {
-    return res.status(400).send({ error: notFoundUriOrSearch });
+  if (!phrase) {
+    return res.status(400).send({ error: 'Expected string values for phrase in query string (also accepts: backupPhrase, album, artists)' });
   }
 
-  const searchThis = uri || search;
-  const lowerType = type && type.toLowerCase ? type.toLowerCase() : '';
-
-  if (lowerType === 'spotify') {
-    const {
-      backupPhrase,
-      album,
-      artists,
-    } = req.body;
-
-    if (!phrase || typeof phrase !== 'string'
-      || typeof backupPhrase !== 'string'
-      || typeof album !== 'string'
-      || typeof artists !== 'string') {
-      return res.status(400).send({ error: 'required params must be strings: phrase, backupPhrase, album, artists' });
-    }
-
-    const closest = await closestYouTubeMatch(phrase, backupPhrase, album, artists);
-    return res.status(200).send(closest);
+  if (typeof phrase !== 'string'
+    || (backupPhrase && typeof backupPhrase !== 'string')
+    || (album && typeof album !== 'string')
+    || (artists && typeof artists !== 'string')) {
+    return res.status(400).send({ error: 'required queries must be strings: phrase, backupPhrase, album, artists' });
   }
 
-  if (validURL(searchThis)) {
-    if (lowerType === 'similarto') {
-      const results = await findRelevantVideos(searchThis);
-      return res.status(200).send(results);
-    }
+  const closest = await closestYouTubeMatch(phrase, backupPhrase, album, artists);
+  if (!closest) return res.status(404).send();
 
-    const results = (lowerType === 'clipmega') ? await getPlayClipMegaURL(searchThis) : await getHDTracksInvidio(searchThis);
-    return res.status(200).send(results);
+  return res.status(200).send(closest);
+});
+
+route.get('/similarto', async (req, res) => {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).send({ error: 'Expected url in query string' });
   }
 
-  if (!search) {
-    return res.status(400).send({ error: notFoundUriOrSearch });
+  const results = await findRelevantVideos(decodeURIComponent(url));
+  return res.status(200).send(results);
+});
+
+route.get('/search', async (req, res) => {
+  const { type, url: urlEncoded, name } = req.query;
+
+  if (!urlEncoded && !name) {
+    return res.status(400).send({ error: 'Expected url or name in query string' });
   }
 
-  const results = await getTracks(search);
+  const url = urlEncoded ? decodeURIComponent(urlEncoded) : undefined;
+
+  if (!url || (url && !validURL(url))) {
+    return res.status(400).send({ error: 'Invalid url provided' });
+  }
+
+  if (!name && url) {
+    const resultsURL = (type && type.toLowerCase() === 'invidio') ? await getHDTracksInvidio(url) : await getPlayClipMegaURL(url);
+    return res.status(200).send(resultsURL);
+  }
+
+  const results = await getTracks(name);
   return res.status(200).send(results);
 });
 
