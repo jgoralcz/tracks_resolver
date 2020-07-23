@@ -54,7 +54,7 @@ spec:
             secretName: ${PREFIX}tracks-resolver-api.json
         - name: auth
           secret:
-            secretName: ${PREFIX}tracks-resolver-api-auth.json
+            secretName: ${PREFIX}tracks-resolver-auth.json
         - name: config
           configMap:
             name: ${PREFIX}tracks-resolver-config.json
