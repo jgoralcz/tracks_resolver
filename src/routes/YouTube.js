@@ -54,7 +54,7 @@ route.get('/search', async (req, res) => {
 
   const url = urlEncoded ? decodeURIComponent(urlEncoded) : undefined;
 
-  if (!url || (url && !validURL(url))) {
+  if (url && !validURL(url)) {
     return res.status(400).send({ error: 'Invalid url provided' });
   }
 
