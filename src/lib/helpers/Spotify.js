@@ -33,11 +33,6 @@ module.exports = class Spotify {
     return this;
   }
 
-  async refresh() {
-    const accessToken = await this.spotify.refreshAccessToken();
-    this.spotify.setAccessToken(accessToken);
-  }
-
   async getLinks(playlistID) {
     let playlist = await this.spotify.getPlaylist(playlistID);
 
