@@ -2,6 +2,7 @@ const { scheduleJob } = require('node-schedule');
 
 const { config: configPath } = require('./lib/constants/paths');
 const Spotify = require('./lib/helpers/Spotify');
+const logger = require('log4js').getLogger();
 
 const config = require(configPath);
 
@@ -9,7 +10,7 @@ const config = require(configPath);
 // every 30 min because token exires after 1 hour
 const spotifyJob = async () => {
   const spotify = new Spotify();
-  spotifyJob.spotify = await spotify.create();
+  spotifyJob.spotify = await spotify.create().catch(error => logger.error(error));
 
   const refreshTimeInMinutes = config
     && config.refreshTimeInMinutes >= 0 && config.refreshTimeInMinutes <= 59
@@ -21,7 +22,7 @@ const spotifyJob = async () => {
     const minutes = now.getMinutes();
 
     if (minutes % refreshTimeInMinutes === 0) {
-      spotify.refresh();
+      spotifyJob.spotify = await spotify.create().catch(error => logger.error(error));
     }
   });
 };
