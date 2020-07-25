@@ -352,7 +352,7 @@ const relevantVideos = async (videoID) => {
     .filter((metaData) => metaData && metaData.href && metaData.title)
     .map((metaData) => ({
       videoID: metaData.href.replace('watch?v=', ''),
-      url: `https://www.youtube.com/${metaData.href}`,
+      uri: `https://www.youtube.com/${metaData.href}`,
       title: metaData.title,
     }));
 
