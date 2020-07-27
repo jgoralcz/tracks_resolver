@@ -287,10 +287,11 @@ const getTracks = async (str) => {
 
 const findClosest = (videos, threshold, titles, phrase, album, artists) => {
   // find the best match whether using album or phrase, it's a toss up; it's strange for unpopular songs.
-  const albumSearch = findBestMatch(`${phrase} ${album}`, titles);
-  const artistsSearch = findBestMatch(`${phrase} ${artists}`, titles);
-  const artistsSearch2 = findBestMatch(`${artists} ${phrase} `, titles);
-  let songSearch = findBestMatch(phrase, titles);
+  const titlesArray = Array.isArray(titles) ? titles : [titles || ''];
+  const albumSearch = findBestMatch(`${phrase} ${album}`, titlesArray);
+  const artistsSearch = findBestMatch(`${phrase} ${artists}`, titlesArray);
+  const artistsSearch2 = findBestMatch(`${artists} ${phrase} `, titlesArray);
+  let songSearch = findBestMatch(phrase, titlesArray);
 
   // which one is closer?, find out here, give a less weight to album
   if ((albumSearch.ratings[albumSearch.bestMatchIndex].rating - 0.06) >= songSearch.ratings[songSearch.bestMatchIndex].rating) songSearch = albumSearch;
