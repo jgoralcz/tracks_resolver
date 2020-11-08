@@ -338,14 +338,17 @@ const closestYouTubeMatch = async (phrase, backup, album, artists) => {
   if (!phrase || !videos.tracks[0].info.title) return undefined;
 
   // last attempt, take first video and search them for exact words with the phrase
-  const bestSearch = videos.tracks[0].info.title;
-  const bestSearchLower = bestSearch.toLowerCase();
-  const phraseLower = phrase.replace(/[^\w\s]|_/g, '').replace(/\s+/g, ' ').replace(/\-/g, '').toLowerCase();
-  const phraseLowerSplit = phraseLower.split(' ');
+  const searchMax = videos.tracks.length > 5 ? 5 : videos.tracks.length;
 
-  if (phraseLowerSplit.some(str => !bestSearchLower.includes(str))) return undefined;
+  for (let i = 0; i < searchMax; i += 1) {
+    const bestSearch = videos.tracks[i].info.title;
+    const bestSearchLower = bestSearch.toLowerCase();
+    const phraseLower = backup.replace(/[^\w\s]|_/g, '').replace(/\s+/g, ' ').replace(/-/g, '').toLowerCase();
+    const phraseLowerSplit = phraseLower.split(' ');
+    if (phraseLowerSplit.every((str) => bestSearchLower.includes(str))) return videos.tracks[i];
+  }
 
-  return videos.tracks[0];
+  return undefined;
 };
 
 const relevantVideos = async (videoID) => {
