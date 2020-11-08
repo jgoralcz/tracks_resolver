@@ -32,6 +32,7 @@ const testSpotify = async (url) => {
     const [, playlistID] = matches;
     return spotifyJob.spotify.getLinks(playlistID);
   }
+
   return [];
 };
 
