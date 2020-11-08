@@ -79,7 +79,7 @@ module.exports = class Spotify {
 
   static addTracks(playlist) {
     if (!playlist || !playlist.body || !playlist.body.items) return [];
-    return playlist.body.items.map((sp) => ({ info: Spotify.createSpotifyObject(sp.track) }));
+    return playlist.body.items.filter((sp) => sp && sp.track).map((sp) => ({ info: Spotify.createSpotifyObject(sp.track) }));
   }
 
   async getAlbum(id) {
