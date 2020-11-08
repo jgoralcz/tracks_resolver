@@ -307,7 +307,6 @@ const findClosest = (videos, threshold, titles, phrase, album, artists) => {
 
 const closestYouTubeMatch = async (phrase, backup, album, artists) => {
   const videos = await getTracks(`${phrase} ${artists || ''} lyrics`);
-
   if (!videos || !videos.tracks || !videos.tracks[0] || !videos.tracks[0].info) return undefined;
 
   const titlesMap = videos.tracks.map((video) => video.info.title);
@@ -328,16 +327,25 @@ const closestYouTubeMatch = async (phrase, backup, album, artists) => {
   // try 1 more time with just the phrase
   // higher threshold because we're being less restrictive
   const threshold2 = 0.62;
-  const videos2 = await findClosest(phrase);
+  const videos2 = await findClosest(videos, threshold2, titles, phrase, album, artists);
+  if (videos2 && videos2.tracks && videos2.tracks[0] && videos2.tracks[0].info) {
+    const titles2 = videos2.tracks.map((video) => video.info.title);
 
-  if (!videos2 || !videos2.tracks || !videos2.tracks[0] || !videos2.tracks[0].info) return undefined;
+    const found2 = findClosest(videos2, threshold2, titles2, backup, album, artists);
+    if (found2) return found2;
+  }
 
-  const titles2 = videos2.tracks.map((video) => video.info.title);
+  if (!phrase || !videos.tracks[0].info.title) return undefined;
 
-  const found2 = findClosest(videos2, threshold2, titles2, backup, album, artists);
-  if (!found2) return undefined;
+  // last attempt, take first video and search them for exact words with the phrase
+  const bestSearch = videos.tracks[0].info.title;
+  const bestSearchLower = bestSearch.toLowerCase();
+  const phraseLower = phrase.replace(/[^\w\s]|_/g, '').replace(/\s+/g, ' ').replace(/\-/g, '').toLowerCase();
+  const phraseLowerSplit = phraseLower.split(' ');
 
-  return found2;
+  if (phraseLowerSplit.some(str => !bestSearchLower.includes(str))) return undefined;
+
+  return videos.tracks[0];
 };
 
 const relevantVideos = async (videoID) => {
