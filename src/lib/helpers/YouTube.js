@@ -10,6 +10,15 @@ const { getMilliseconds } = require('../functions/milliseconds.js');
 const timeout = 10000;
 const { JSDOM } = jsdom;
 
+const invidiousURLs = [
+  'https://invidious.xyz/',
+  'https://invidious.site/',
+  'https://invidious.fdn.fr/',
+  'https://invidious.snopyta.org/',
+  'https://invidious.kavin.rocks/',
+  'https://yewtu.be/',
+  'https://invidious.zapashcanon.fr',
+];
 
 const getInvidioUsTracks = async (info) => {
   if (!info) return [];
@@ -83,7 +92,7 @@ const getYoutubePlaylist = async (uri) => {
   let info = [];
   let page = 1;
   do {
-    const req = await request(`https://invidio.us/playlist?list=${ID}&page=${page}`).catch(() => undefined);
+    const req = await request(`https://invidious.zapashcanon.fr/playlist?list=${ID}&page=${page}`).catch(() => undefined);
     newInfo = await getInvidioUsTracks(req);
 
     if (newInfo && newInfo.tracks && newInfo.tracks.length > 0) {
@@ -191,7 +200,7 @@ const getHDTracksInvidio = async (uri) => {
 
   let url = uri.replace('m.youtube', 'invidio.us').replace('youtube', 'invidio.us');
   if (url.includes('youtu.be')) {
-    url = url.replace('youtu.be/', 'invidio.us/watch?v=');
+    url = url.replace('youtu.be/', 'invidious.zapashcanon.fr/watch?v=');
   }
   url = url.replace('.com', '');
 
@@ -221,14 +230,14 @@ const getHDTracksInvidio = async (uri) => {
 
   return {
     title,
-    uri: `https://www.invidio.us${urlVideo}`,
+    uri: `https://www.invidious.zapashcanon.fr${urlVideo}`,
     identifier: `https://ytimg.googleusercontent.com/vi/${id}/hqdefault.jpg`,
     type: 'invidio',
   };
 };
 
 const getTracksBackup = async (str) => {
-  const url = `https://invidio.us/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
+  const url = `https://invidious.zapashcanon.fr/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
   const info = await request(url);
   return getInvidioUsTracks(info);
 };
