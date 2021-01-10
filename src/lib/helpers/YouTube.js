@@ -213,11 +213,13 @@ const getHDTracksInvidio = async (uri) => {
   const urlVideo = info.substring(info.indexOf('source src="') + 12, info.indexOf(`" type='`));
   if (!urlVideo || urlVideo.length > 200) return getPlayClipMegaURL(uri);
 
-  const titleElement = document.querySelector('h1');
-  if (!titleElement || !titleElement.innerHTML || !titleElement.innerHTML.trim) return getPlayClipMegaURL(uri);
+  const indexOfTitle = info.indexOf('<h1>');
+  if (indexOfTitle < 0) {
+    logger.error(`Could not find a title matching ${uri} - ${url}`);
+    return getPlayClipMegaURL(uri);
+  }
 
-  const tempTitle = titleElement.innerHTML.trim();
-  console.log('tempTitle', tempTitle);
+  const tempTitle = info.substring(indexOfTitle + 4, indexOfTitle + 200); // hacky way to get only a range
   const title = tempTitle.substring(0, tempTitle.indexOf('<a title=')).trim();
 
   console.log('title', title);
