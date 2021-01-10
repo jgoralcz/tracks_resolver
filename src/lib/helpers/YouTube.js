@@ -198,7 +198,7 @@ const getHDTracksInvidio = async (uri) => {
   if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be')) return undefined;
   if (uri.includes('list')) return getYoutubePlaylist(uri);
 
-  let url = uri.replace('m.youtube', 'invidious.kavin.rocks').replace('youtube', 'invidious.kavin.rocks');
+  let url = uri.replace('m.youtube', 'invidious.kavin.rocks').replace('youtube', 'invidious.kavin.rocks').replace('www.', '');
   if (url.includes('youtu.be')) {
     url = url.replace('youtu.be/', 'invidious.kavin.rocks/watch?v=');
   }
