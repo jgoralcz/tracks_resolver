@@ -17,7 +17,7 @@ const invidiousURLs = [
   'https://invidious.snopyta.org/',
   'https://invidious.kavin.rocks/',
   'https://yewtu.be/',
-  'https://invidious.zapashcanon.fr',
+  'https://invidious.kavin.rocks',
 ];
 
 const getInvidioUsTracks = async (info) => {
@@ -92,7 +92,7 @@ const getYoutubePlaylist = async (uri) => {
   let info = [];
   let page = 1;
   do {
-    const req = await request(`https://invidious.zapashcanon.fr/playlist?list=${ID}&page=${page}`).catch(() => undefined);
+    const req = await request(`https://invidious.kavin.rocks/playlist?list=${ID}&page=${page}`).catch(() => undefined);
     newInfo = await getInvidioUsTracks(req);
 
     if (newInfo && newInfo.tracks && newInfo.tracks.length > 0) {
@@ -200,7 +200,7 @@ const getHDTracksInvidio = async (uri) => {
 
   let url = uri.replace('m.youtube', 'invidio.us').replace('youtube', 'invidio.us');
   if (url.includes('youtu.be')) {
-    url = url.replace('youtu.be/', 'invidious.zapashcanon.fr/watch?v=');
+    url = url.replace('youtu.be/', 'invidious.kavin.rocks/watch?v=');
   }
   url = url.replace('.com', '');
 
@@ -219,25 +219,29 @@ const getHDTracksInvidio = async (uri) => {
   const tempTitle = titleElement.innerHTML.trim();
   const title = tempTitle.substring(0, tempTitle.indexOf('<a title=')).trim();
 
+  if (!title) return getPlayClipMegaURL(uri);
+
   let endIndex = url.length;
   if (url.indexOf('?') > 0) {
     endIndex = url.indexOf('?') + 1;
   }
+
   if (url.indexOf('&') > endIndex) {
     endIndex = url.indexOf('&') + 1;
   }
+
   const id = urlVideo.substring(urlVideo.indexOf('id=') + 3, urlVideo.indexOf('&itag'));
 
   return {
     title,
-    uri: `https://www.invidious.zapashcanon.fr${urlVideo}`,
+    uri: `https://www.invidious.kavin.rocks${urlVideo}`,
     identifier: `https://ytimg.googleusercontent.com/vi/${id}/hqdefault.jpg`,
     type: 'invidio',
   };
 };
 
 const getTracksBackup = async (str) => {
-  const url = `https://invidious.zapashcanon.fr/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
+  const url = `https://invidious.kavin.rocks/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
   const info = await request(url);
   return getInvidioUsTracks(info);
 };
