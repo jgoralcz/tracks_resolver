@@ -219,6 +219,8 @@ const getHDTracksInvidio = async (uri) => {
     return getPlayClipMegaURL(uri);
   }
 
+  console.log(info);
+
   const tempTitle = info.substring(indexOfTitle + 4, indexOfTitle + 200); // hacky way to get only a range
   const title = tempTitle.substring(0, tempTitle.indexOf('<a title=')).trim();
 
