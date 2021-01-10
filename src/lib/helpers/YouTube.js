@@ -219,6 +219,8 @@ const getHDTracksInvidio = async (uri) => {
   const tempTitle = titleElement.innerHTML.trim();
   const title = tempTitle.substring(0, tempTitle.indexOf('<a title=')).trim();
 
+  console.log('title', title);
+
   if (!title) return getPlayClipMegaURL(uri);
 
   let endIndex = url.length;
