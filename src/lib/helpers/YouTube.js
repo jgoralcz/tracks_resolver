@@ -198,7 +198,7 @@ const getHDTracksInvidio = async (uri) => {
   if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be')) return undefined;
   if (uri.includes('list')) return getYoutubePlaylist(uri);
 
-  let url = uri.replace('m.youtube', 'invidious.kavin.rocks').replace('youtube', 'invidious.kavin.rocks').replace('www.', '');
+  let url = uri.replace('m.youtube', 'invidio.us').replace('youtube', 'invidio.us');
   if (url.includes('youtu.be')) {
     url = url.replace('youtu.be/', 'invidious.kavin.rocks/watch?v=');
   }
@@ -213,18 +213,11 @@ const getHDTracksInvidio = async (uri) => {
   const urlVideo = info.substring(info.indexOf('source src="') + 12, info.indexOf(`" type='`));
   if (!urlVideo || urlVideo.length > 200) return getPlayClipMegaURL(uri);
 
-  const indexOfTitle = info.indexOf('<h1>');
-  if (indexOfTitle < 0) {
-    logger.error(`Could not find a title matching ${uri} - ${url}`);
-    return getPlayClipMegaURL(uri);
-  }
+  const titleElement = document.querySelector('h1');
+  if (!titleElement || !titleElement.innerHTML || !titleElement.innerHTML.trim) return getPlayClipMegaURL(uri);
 
-  console.log(info);
-
-  const tempTitle = info.substring(indexOfTitle + 4, indexOfTitle + 200); // hacky way to get only a range
+  const tempTitle = titleElement.innerHTML.trim();
   const title = tempTitle.substring(0, tempTitle.indexOf('<a title=')).trim();
-
-  console.log('title', title);
 
   if (!title) return getPlayClipMegaURL(uri);
 
@@ -241,7 +234,7 @@ const getHDTracksInvidio = async (uri) => {
 
   return {
     title,
-    uri: `https://www.invidious.kavin.rocks${urlVideo}`,
+    uri: `https://invidious.kavin.rocks${urlVideo}`,
     identifier: `https://ytimg.googleusercontent.com/vi/${id}/hqdefault.jpg`,
     type: 'invidio',
   };
