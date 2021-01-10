@@ -225,9 +225,11 @@ const getHDTracksInvidio = async (uri) => {
   if (url.indexOf('?') > 0) {
     endIndex = url.indexOf('?') + 1;
   }
+
   if (url.indexOf('&') > endIndex) {
     endIndex = url.indexOf('&') + 1;
   }
+
   const id = urlVideo.substring(urlVideo.indexOf('id=') + 3, urlVideo.indexOf('&itag'));
 
   return {
