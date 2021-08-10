@@ -348,24 +348,24 @@ const relevantVideos = async (videoID) => {
 
   const { document } = (new JSDOM(info)).window;
 
-  const videoSelection = [...document.querySelectorAll('.related-video > a')];
+  const videoSelection = [...document.querySelectorAll('.ytv-title > a')];
   if (!videoSelection || videoSelection.length <= 0) return [];
 
   const basicVideos = videoSelection
-    .filter((metaData) => metaData && metaData.href && metaData.title)
+    .filter((metaData) => metaData && metaData.href && metaData.innerHTML)
     .map((metaData) => ({
       videoID: metaData.href.replace('watch?v=', ''),
       uri: `https://www.youtube.com/${metaData.href}`,
-      title: metaData.title,
+      title: metaData.innerHTML,
     }));
 
-  const thumbnailsSelection = [...document.querySelectorAll('.related-thumbs > img')];
+  const thumbnailsSelection = [...document.querySelectorAll('.ytv-thumb > a > img')];
   const thumbnails = thumbnailsSelection.map((thumbnail) => ((thumbnail && thumbnail.src) ? thumbnail.src : ''));
 
-  const durationSelection = [...document.querySelectorAll('.related-thumbs > span')];
+  const durationSelection = [...document.querySelectorAll('.ytv-thumb > a > span')];
   const durations = durationSelection.map((duration) => ((duration && duration.innerHTML) ? getMilliseconds(duration.innerHTML) : ''));
 
-  const channelSelection = [...document.querySelectorAll('.user')];
+  const channelSelection = [...document.querySelectorAll('.ytv-byline > a')];
   const channels = channelSelection.map((channel) => ((channel && channel.innerHTML) ? channel.innerHTML : ''));
 
   for (let i = 0; i < basicVideos.length; i += 1) {
