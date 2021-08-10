@@ -11,14 +11,26 @@ const timeout = 10000;
 const { JSDOM } = jsdom;
 
 const invidiousURLs = [
-  'https://invidious.xyz/',
-  'https://invidious.site/',
   'https://invidious.fdn.fr/',
-  'https://invidious.snopyta.org/',
-  'https://invidious.kavin.rocks/',
+  'https://ytprivate.com/',
+  'https://invidious.namazso.eu',
+  'https://y.com.cm',
   'https://yewtu.be/',
-  'https://invidious.kavin.rocks',
 ];
+
+let currentInvidioUsURL = invidiousURLs[0];
+const rotateInvidioUsURL = () => {
+  const index = invidiousURLs.indexOf(currentInvidioUsURL);
+
+  if (index < 0 || index >= invidiousURLs.length - 1) {
+    [currentInvidioUsURL] = invidiousURLs;
+    return currentInvidioUsURL;
+  }
+
+  currentInvidioUsURL = invidiousURLs[index + 1];
+
+  return currentInvidioUsURL;
+};
 
 const getInvidioUsTracks = async (info) => {
   if (!info) return [];
@@ -43,15 +55,23 @@ const getInvidioUsTracks = async (info) => {
         tracks.push({ info: {} });
         const index = tracks.length - 1;
 
-        // assign our title and thumbnail
-        if (trackMeta.length > 2) {
-          tracks[index].info.title = trackMeta[trackMeta.length - 2].innerHTML.replace(/\s+/g, ' '); // only want 1 space for formatting.
+        const indexOfTitle = info.indexOf('<h1>');
+        if (indexOfTitle >= 0) {
+          const tempTitle = info.substring(indexOfTitle + 4, indexOfTitle + 200); // hacky way to get only a range
+          const title = tempTitle.substring(0, tempTitle.indexOf('<a title=')).trim();
+          tracks[index].info.title = title;
         } else {
-          const pTag = video.getElementsByTagName('p');
-          if (pTag && (pTag.length === 2 || pTag.length === 3) && pTag[1] && pTag[1].innerHTML) {
-            tracks[index].info.title = pTag[1].innerHTML;
+          // assign our title and thumbnail
+          // eslint-disable-next-line no-lonely-if
+          if (trackMeta.length > 2) {
+            tracks[index].info.title = trackMeta[trackMeta.length - 2].innerHTML.replace(/\s+/g, ' '); // only want 1 space for formatting.
           } else {
-            tracks[index].info.title = 'Unknown Title';
+            const pTag = video.getElementsByTagName('p');
+            if (pTag && (pTag.length === 2 || pTag.length === 3) && pTag[1] && pTag[1].innerHTML) {
+              tracks[index].info.title = pTag[1].innerHTML;
+            } else {
+              tracks[index].info.title = 'Unknown Title';
+            }
           }
         }
         tracks[index].info.thumbnail = `https://ytimg.googleusercontent.com${idMeta[0].src}`;
@@ -92,7 +112,8 @@ const getYoutubePlaylist = async (uri) => {
   let info = [];
   let page = 1;
   do {
-    const req = await request(`https://invidious.kavin.rocks/playlist?list=${ID}&page=${page}`).catch(() => undefined);
+    rotateInvidioUsURL();
+    const req = await request(`${currentInvidioUsURL}/playlist?list=${ID}&page=${page}`).catch(() => undefined);
     newInfo = await getInvidioUsTracks(req);
 
     if (newInfo && newInfo.tracks && newInfo.tracks.length > 0) {
@@ -100,6 +121,7 @@ const getYoutubePlaylist = async (uri) => {
     }
 
     page += 1;
+    if (page > 10) break;
   } while (newInfo && newInfo.tracks && newInfo.tracks.length > 0);
 
   if (!info || info.length <= 0) {
@@ -113,72 +135,23 @@ const getYoutubePlaylist = async (uri) => {
   };
 };
 
-const getPlayTunez = async (uri) => {
-  // return YouTube.getHDTracksInvidio(uri);
-  // http://playtunez.com/watch/tmozGmGoJuw
-  if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be')) return undefined;
-  if (uri.includes('list')) return getYoutubePlaylist(uri);
-
-  let url = uri.replace('m.youtube', 'playtunez').replace('youtube', 'playtunez');
-  if (url.includes('youtu.be')) {
-    url = url.replace('youtu.be/', 'playtunez.com/watch/');
-  }
-  url = url.replace('?v=', '/');
-
-  let endIndex = url.length;
-  if (url.indexOf('?') > 0) {
-    endIndex = url.indexOf('?') + 1;
-  }
-  if (url.indexOf('&') > endIndex) {
-    endIndex = url.indexOf('&') + 1;
-  }
-
-  const id = url.substring(url.lastIndexOf('/') + 1, endIndex);
-
-  const info = await request({ url, timeout }).catch((error) => logger.error(error));
-  if (!info) return undefined;
-
-  const { document } = (new JSDOM(info)).window;
-
-  const videoResult = await request({ url: `http://playtunez.com/embed/${id}`, timeout }).catch((error) => console.error(error));
-  if (!videoResult) return undefined;
-
-  const video = videoResult.substring(videoResult.indexOf("src:'") + 5, videoResult.indexOf("',type"));
-
-  const titleElement = document.querySelector('h2');
-  if (!titleElement || !titleElement.innerHTML) return undefined;
-
-  const tempTitle = titleElement.innerHTML.replace('- playtunez.com', '').replace('playtunez', '').replace('.com', '').trim();
-  const title = tempTitle.substring(0, tempTitle.indexOf('<br>')).trim();
-
-  if (!video || !video.startsWith('https://') || !title || title.length >= 300) return undefined;
-
-  return {
-    title,
-    uri: video,
-    identifier: `https://ytimg.googleusercontent.com/vi/${id}/hqdefault.jpg`,
-    type: 'playtunez',
-  };
-};
-
 const getPlayClipMegaURL = async (uri) => {
-  console.log('uri', uri);
   if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be')) return undefined;
   if (uri.includes('list')) return getYoutubePlaylist(uri);
 
   const url = uri.replace('m.youtube', 'clipmega').replace('youtube', 'clipmega').replace('youtu.be/', 'clipmega.com/watch?v=');
 
   const info = await request({ url, timeout }).catch((error) => logger.error(error));
-  if (!info) return getPlayTunez(uri);
+  if (!info) return undefined;
 
   const { document } = (new JSDOM(info)).window;
 
   const titleElement = document.querySelector('div.video-title');
-  if (!titleElement || !titleElement.innerHTML) return getPlayTunez(uri);
+  if (!titleElement || !titleElement.innerHTML) return undefined;
   const title = titleElement.innerHTML;
 
   const videoElement = document.querySelector('video source');
-  if (!videoElement || !videoElement.src) return getPlayTunez(uri);
+  if (!videoElement || !videoElement.src) return undefined;
   const video = videoElement.src;
 
   const possibleImage = info.substring(info.lastIndexOf('/vi/') + 4, info.lastIndexOf('/0.jpg'));
@@ -191,16 +164,19 @@ const getPlayClipMegaURL = async (uri) => {
       type: 'clipmega',
     };
   }
-  return getPlayTunez(uri);
+
+  return undefined;
 };
 
 const getHDTracksInvidio = async (uri) => {
   if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be')) return undefined;
   if (uri.includes('list')) return getYoutubePlaylist(uri);
 
-  let url = uri.replace('m.youtube', 'invidious.kavin.rocks').replace('youtube', 'invidious.kavin.rocks').replace('www.', '');
+  const updatedURL = currentInvidioUsURL.replace('https://', '').replace('/', '');
+
+  let url = uri.replace('m.youtube', updatedURL).replace('youtube', updatedURL).replace('www.', '');
   if (url.includes('youtu.be')) {
-    url = url.replace('youtu.be/', 'invidious.kavin.rocks/watch?v=');
+    url = url.replace('youtu.be/', `${updatedURL}/watch?v=`);
   }
   url = url.replace('.com', '');
 
@@ -235,14 +211,15 @@ const getHDTracksInvidio = async (uri) => {
 
   return {
     title,
-    uri: `https://invidious.kavin.rocks${urlVideo}`,
+    uri: currentInvidioUsURL + urlVideo,
     identifier: `https://ytimg.googleusercontent.com/vi/${id}/hqdefault.jpg`,
     type: 'invidio',
   };
 };
 
 const getTracksBackup = async (str) => {
-  const url = `https://invidious.kavin.rocks/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
+  rotateInvidioUsURL();
+  const url = `${currentInvidioUsURL}/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
   const info = await request(url);
   return getInvidioUsTracks(info);
 };
