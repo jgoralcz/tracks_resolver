@@ -2,7 +2,7 @@
 const logger = require('log4js').getLogger();
 const jsdom = require('jsdom');
 const { findBestMatch } = require('string-similarity');
-const request = require('request-promise');
+const axios = require('axios');
 const urlParse = require('url');
 
 const { getMilliseconds } = require('../functions/milliseconds.js');
@@ -16,6 +16,9 @@ const invidiousURLs = [
   'https://invidious.namazso.eu',
   'https://y.com.cm',
   'https://yewtu.be/',
+  'https://vid.mint.lgbt',
+  'https://ytprivate.com',
+  'https://invidio.xamh.de',
 ];
 
 let currentInvidioUsURL = invidiousURLs[0];
@@ -33,9 +36,10 @@ const rotateInvidioUsURL = () => {
 };
 
 const getInvidioUsTracks = async (info) => {
-  if (!info) return [];
+  if (!info || !info.data || info.status !== 200) return [];
+  const { data } = info;
 
-  const { document } = (new JSDOM(info)).window;
+  const { document } = (new JSDOM(data)).window;
 
   const tracks = [];
   const videos = document.querySelectorAll('div.pure-u-1.pure-u-md-1-4 > div.h-box');
@@ -55,25 +59,13 @@ const getInvidioUsTracks = async (info) => {
         tracks.push({ info: {} });
         const index = tracks.length - 1;
 
-        const indexOfTitle = info.indexOf('<h1>');
-        if (indexOfTitle >= 0) {
-          const tempTitle = info.substring(indexOfTitle + 4, indexOfTitle + 200); // hacky way to get only a range
-          const title = tempTitle.substring(0, tempTitle.indexOf('<a title=')).trim();
-          tracks[index].info.title = title;
+        const pTag = video.getElementsByTagName('p');
+        if (pTag && pTag[1] && pTag[1].innerHTML) {
+          tracks[index].info.title = pTag[1].innerHTML;
         } else {
-          // assign our title and thumbnail
-          // eslint-disable-next-line no-lonely-if
-          if (trackMeta.length > 2) {
-            tracks[index].info.title = trackMeta[trackMeta.length - 2].innerHTML.replace(/\s+/g, ' '); // only want 1 space for formatting.
-          } else {
-            const pTag = video.getElementsByTagName('p');
-            if (pTag && (pTag.length === 2 || pTag.length === 3) && pTag[1] && pTag[1].innerHTML) {
-              tracks[index].info.title = pTag[1].innerHTML;
-            } else {
-              tracks[index].info.title = 'Unknown Title';
-            }
-          }
+          tracks[index].info.title = 'Unknown Title';
         }
+
         tracks[index].info.thumbnail = `https://ytimg.googleusercontent.com${idMeta[0].src}`;
 
         // get times
@@ -92,85 +84,8 @@ const getInvidioUsTracks = async (info) => {
   return { loadType: 'PLAYLIST_LOADED', tracks, type: 'invidio' };
 };
 
-const getYoutubePlaylist = async (uri) => {
-  // https://youtube.com/playlist?list=PLRCAnALQiSQWMuY6pHxV0Y4UJAAXfTRPS0
-  // https://invidio.us/playlist?list=PLRCAnALQiSQWMuY6pHxV0Y4UJAAXfTRPS
-  if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be') && !uri.includes('list')) return undefined;
-
-  const listIndex = uri.indexOf('list=') + 5;
-  if (listIndex <= 5) return undefined;
-
-  const remainingStr = uri.substring(listIndex, uri.length);
-  const findIDstr = remainingStr.indexOf('&');
-
-  const endOfID = (findIDstr > 0) ? findIDstr : remainingStr.length;
-
-  const ID = remainingStr.substring(0, endOfID);
-  if (!ID) return undefined;
-
-  let newInfo;
-  let info = [];
-  let page = 1;
-  do {
-    rotateInvidioUsURL();
-    const req = await request(`${currentInvidioUsURL}/playlist?list=${ID}&page=${page}`).catch(() => undefined);
-    newInfo = await getInvidioUsTracks(req);
-
-    if (newInfo && newInfo.tracks && newInfo.tracks.length > 0) {
-      info = [...info, ...newInfo.tracks];
-    }
-
-    page += 1;
-    if (page > 10) break;
-  } while (newInfo && newInfo.tracks && newInfo.tracks.length > 0);
-
-  if (!info || info.length <= 0) {
-    return {};
-  }
-
-  return {
-    loadType: 'PLAYLIST_LOADED',
-    type: 'invidio',
-    tracks: info,
-  };
-};
-
-const getPlayClipMegaURL = async (uri) => {
-  if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be')) return undefined;
-  if (uri.includes('list')) return getYoutubePlaylist(uri);
-
-  const url = uri.replace('m.youtube', 'clipmega').replace('youtube', 'clipmega').replace('youtu.be/', 'clipmega.com/watch?v=');
-
-  const info = await request({ url, timeout }).catch((error) => logger.error(error));
-  if (!info) return undefined;
-
-  const { document } = (new JSDOM(info)).window;
-
-  const titleElement = document.querySelector('div.video-title');
-  if (!titleElement || !titleElement.innerHTML) return undefined;
-  const title = titleElement.innerHTML;
-
-  const videoElement = document.querySelector('video source');
-  if (!videoElement || !videoElement.src) return undefined;
-  const video = videoElement.src;
-
-  const possibleImage = info.substring(info.lastIndexOf('/vi/') + 4, info.lastIndexOf('/0.jpg'));
-
-  if (video && video.startsWith('https://redirector.googlevideo.com') && title && title.length < 300) {
-    return {
-      title,
-      uri: video,
-      identifier: (possibleImage && possibleImage.length < 32) ? possibleImage : undefined,
-      type: 'clipmega',
-    };
-  }
-
-  return undefined;
-};
-
 const getHDTracksInvidio = async (uri) => {
   if (!uri.includes('m.youtube') && !uri.includes('youtube') && !uri.includes('youtu.be')) return undefined;
-  if (uri.includes('list')) return getYoutubePlaylist(uri);
 
   const updatedURL = currentInvidioUsURL.replace('https://', '').replace('/', '');
 
@@ -180,23 +95,24 @@ const getHDTracksInvidio = async (uri) => {
   }
   url = url.replace('.com', '');
 
-  const info = await request({ url, timeout }).catch((error) => logger.error(error));
-  if (!info) return getPlayClipMegaURL(uri);
+  const info = await axios.get(url, { timeout }).catch((error) => logger.error(error));
+  if (!info || !info.data || info.status !== 200) return undefined;
+  const { data } = info;
 
   // eslint-disable-next-line quotes
-  const urlVideo = info.substring(info.indexOf('source src="') + 12, info.indexOf(`" type='`));
-  if (!urlVideo || urlVideo.length > 200) return getPlayClipMegaURL(uri);
+  const urlVideo = data.substring(data.indexOf('source src="') + 12, data.indexOf(`" type='`));
+  if (!urlVideo || urlVideo.length > 200) return undefined;
 
-  const indexOfTitle = info.indexOf('<h1>');
+  const indexOfTitle = data.indexOf('<h1>');
   if (indexOfTitle < 0) {
     logger.error(`Could not find a title matching ${uri} - ${url}`);
-    return getPlayClipMegaURL(uri);
+    return undefined;
   }
 
-  const tempTitle = info.substring(indexOfTitle + 4, indexOfTitle + 200); // hacky way to get only a range
+  const tempTitle = data.substring(indexOfTitle + 4, indexOfTitle + 200); // hacky way to get only a range
   const title = tempTitle.substring(0, tempTitle.indexOf('<a title=')).trim();
 
-  if (!title) return getPlayClipMegaURL(uri);
+  if (!title) return undefined;
 
   let endIndex = url.length;
   if (url.indexOf('?') > 0) {
@@ -217,63 +133,11 @@ const getHDTracksInvidio = async (uri) => {
   };
 };
 
-const getTracksBackup = async (str) => {
+const getTracks = async (str) => {
   rotateInvidioUsURL();
   const url = `${currentInvidioUsURL}/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
-  const info = await request(url);
+  const info = await axios.get(url, { timeout }).catch((error) => logger.error(error));
   return getInvidioUsTracks(info);
-};
-
-const getTracks = async (str) => {
-  const url = `https://clipmega.com/search?q=${encodeURIComponent(str).replace(/%20/g, '+')}`;
-  const info = await request({ uri: url, timeout });
-  const { document } = (new JSDOM(info)).window;
-
-  // get our videos
-  const videos = document.querySelectorAll('div.col-xs-12.videopost');
-  const tracks = [];
-
-  // iterate over all possible videos.
-  for (let i = 0; i < videos.length; i += 1) {
-    const video = videos[i];
-
-    // have child nodes to work with
-    if (video.hasChildNodes()) {
-      // scrape the info
-      const trackMeta = video.getElementsByClassName('title-color');
-      const idMeta = video.getElementsByClassName('videosthumbs-style');
-      const timeMeta = video.getElementsByClassName('duration');
-      const channelMeta = video.getElementsByClassName('by-user');
-
-      // make sure we have this info available, otherwise it's incomplete and no good.
-      if (trackMeta && trackMeta.length > 0 && trackMeta[0] && trackMeta[0].title
-        && trackMeta[0].href && idMeta && idMeta.length > 0 && idMeta[0] && idMeta[0].src
-        && timeMeta && timeMeta.length > 0 && timeMeta[0] && timeMeta[0].innerHTML
-        && channelMeta && channelMeta.length > 0 && channelMeta[0] && channelMeta[0].href) {
-        // init info
-        tracks.push({ info: {} });
-        const index = tracks.length - 1;
-
-        // assign our title, uri, and thumbnail
-        tracks[index].info.title = trackMeta[0].title.replace(/\s+/g, ' '); // only want 1 space for formatting.
-        tracks[index].info.uri = `https://www.youtube.com/${trackMeta[0].href}`;
-        tracks[index].info.thumbnail = `https:${idMeta[0].src}`;
-
-        // get times
-        const time = timeMeta[0].innerHTML;
-        tracks[index].info.length = getMilliseconds(time);
-
-        // channel author
-        tracks[index].info.author = channelMeta[0].innerHTML;
-
-        // id is fun because we only get something like https://ytimg.googleusercontent.com/vi/3jx7SF65wbs/mqdefault.jpg
-        tracks[index].info.identifier = idMeta[0].src.replace('//ytimg.googleusercontent.com/vi/', '').replace('/mqdefault.jpg', '');
-      }
-    }
-  }
-  if (!tracks || !tracks.length || tracks.length <= 0) return getTracksBackup(str);
-
-  return { tracks, type: 'clipmega' };
 };
 
 const findClosest = (videos, threshold, titles, phrase, album, artists) => {
@@ -343,10 +207,11 @@ const closestYouTubeMatch = async (phrase, backup, album, artists) => {
 };
 
 const relevantVideos = async (videoID) => {
-  const info = await request({ url: `https://clipmega.com/watch?v=${videoID}`, timeout }).catch((error) => logger.error(error));
-  if (!info) return [];
+  const info = await axios.get(`https://eachnow.com/watch?v=${videoID}`, { timeout }).catch((error) => logger.error(error));
+  if (!info || !info.data || info.status !== 200) return [];
+  const { data } = info;
 
-  const { document } = (new JSDOM(info)).window;
+  const { document } = (new JSDOM(data)).window;
 
   const videoSelection = [...document.querySelectorAll('.ytv-title > a')];
   if (!videoSelection || videoSelection.length <= 0) return [];
@@ -387,7 +252,7 @@ const relevantVideos = async (videoID) => {
   };
 };
 
-const findRelevantVideos = (uri) => {
+const findRelevantVideos = async (uri) => {
   const queryObject = urlParse.parse(uri, true).query;
   const videoID = queryObject.v;
 
@@ -395,13 +260,16 @@ const findRelevantVideos = (uri) => {
     throw new Error('Invalid YouTube URI to autoplay off of.');
   }
 
-  return relevantVideos(videoID).catch(() => []);
+  try {
+    return relevantVideos(videoID);
+  } catch (e) {
+    return [];
+  }
 };
 
 module.exports = {
   findRelevantVideos,
   getTracks,
   getHDTracksInvidio,
-  getPlayClipMegaURL,
   closestYouTubeMatch,
 };
