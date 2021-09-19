@@ -12,12 +12,10 @@ const { JSDOM } = jsdom;
 
 const invidiousURLs = [
   'https://invidious.fdn.fr/',
-  'https://ytprivate.com/',
   'https://invidious.namazso.eu',
   'https://y.com.cm',
   'https://yewtu.be/',
   'https://vid.mint.lgbt',
-  'https://ytprivate.com',
   'https://invidio.xamh.de',
 ];
 
